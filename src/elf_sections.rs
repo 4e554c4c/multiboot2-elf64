@@ -77,6 +77,23 @@ impl Iterator for ElfSectionIter {
     }
 }
 
+#[cfg(feature = "elf32")]
+#[derive(Debug)]
+#[repr(C)]
+pub struct ElfSection {
+    name_index: u32,
+    typ: u32,
+    flags: u32,
+    addr: u32,
+    offset: u32,
+    size: u32,
+    link: u32,
+    info: u32,
+    addralign: u32,
+    entry_size: u32,
+}
+
+#[cfg(not(feature = "elf32"))]
 #[derive(Debug)]
 #[repr(C)]
 pub struct ElfSection {
@@ -152,8 +169,14 @@ pub enum ElfSectionType {
     ProcessorSpecific = 0x7000_0000,
 }
 
+#[cfg(feature = "elf32")]
+type ElfSectionFlagsType = u32;
+
+#[cfg(not(feature = "elf32"))]
+type ElfSectionFlagsType = u64;
+
 bitflags! {
-    flags ElfSectionFlags: u64 {
+    flags ElfSectionFlags: ElfSectionFlagsType {
         const ELF_SECTION_WRITABLE = 0x1,
         const ELF_SECTION_ALLOCATED = 0x2,
         const ELF_SECTION_EXECUTABLE = 0x4,
