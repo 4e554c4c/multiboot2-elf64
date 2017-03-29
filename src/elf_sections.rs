@@ -4,7 +4,7 @@
 pub struct ElfSectionsTag {
     typ: u32,
     size: u32,
-    pub number_of_sections: u32,
+    number_of_sections: u32,
     entry_size: u32,
     shndx: u32, // string table
     first_section: ElfSection,
@@ -82,10 +82,10 @@ impl Iterator for ElfSectionIter {
 pub struct ElfSection {
     name_index: u32,
     typ: u32,
-    pub flags: u64,
-    pub addr: u64,
+    flags: u64,
+    addr: u64,
     offset: u64,
-    pub size: u64,
+    size: u64,
     link: u32,
     info: u32,
     addralign: u64,
@@ -93,12 +93,35 @@ pub struct ElfSection {
 }
 
 impl ElfSection {
+    pub fn section_type(&self) -> ElfSectionType {
+        match self.typ {
+            0 => ElfSectionType::Unused,
+            1 => ElfSectionType::ProgramSection,
+            2 => ElfSectionType::LinkerSymbolTable,
+            3 => ElfSectionType::StringTable,
+            4 => ElfSectionType::RelaRelocation,
+            5 => ElfSectionType::SymbolHashTable,
+            6 => ElfSectionType::DynamicLinkingTable,
+            7 => ElfSectionType::Note,
+            8 => ElfSectionType::Uninitialized,
+            9 => ElfSectionType::RelRelocation,
+            10 => ElfSectionType::Reserved,
+            11 => ElfSectionType::DynamicLoaderSymbolTable,
+            0x6000_0000...0x6FFF_FFFF => ElfSectionType::EnvironmentSpecific,
+            0x7000_0000...0x7FFF_FFFF => ElfSectionType::ProcessorSpecific,
+            _ => panic!(),
+        }
+    }
     pub fn start_address(&self) -> usize {
         self.addr as usize
     }
 
     pub fn end_address(&self) -> usize {
         (self.addr + self.size) as usize
+    }
+
+    pub fn size(&self) -> usize {
+        self.size as usize
     }
 
     pub fn flags(&self) -> ElfSectionFlags {
@@ -110,6 +133,7 @@ impl ElfSection {
     }
 }
 
+#[derive(PartialEq, Eq, Debug, Copy, Clone)]
 #[repr(u32)]
 pub enum ElfSectionType {
     Unused = 0,
@@ -124,8 +148,8 @@ pub enum ElfSectionType {
     RelRelocation = 9,
     Reserved = 10,
     DynamicLoaderSymbolTable = 11,
-    // plus environment-specific use from 0x60000000 to 0x6FFFFFFF
-    // plus processor-specific use from 0x70000000 to 0x7FFFFFFF
+    EnvironmentSpecific = 0x6000_0000,
+    ProcessorSpecific = 0x7000_0000,
 }
 
 bitflags! {
